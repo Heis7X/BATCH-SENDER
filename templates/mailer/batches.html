@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Batches{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Email Batches</h1>
+    <a class="button" href="{% url 'compose_batch' %}">New batch</a>
+</div>
+<div class="card">
+    {% if batches %}
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                {% if request.user.is_staff %}<th>User</th>{% endif %}
+                <th>Gmail account</th>
+                <th>Status</th>
+                <th>Recipients</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for batch in batches %}
+            <tr>
+                <td><a href="{% url 'batch_detail' batch.pk %}">{{ batch.name }}</a></td>
+                {% if request.user.is_staff %}<td>{{ batch.user.username }}</td>{% endif %}
+                <td>{{ batch.gmail_connection.gmail_address }}</td>
+                <td>{{ batch.get_status_display }}</td>
+                <td>{{ batch.recipient_count }}</td>
+                <td>{{ batch.created_at }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No batches found.</p>
+    {% endif %}
+</div>
+{% endblock %}

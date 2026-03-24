@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}{{ batch.name }}{% endblock %}
+{% block content %}
+<section class="grid two-up gap">
+    <div class="card">
+        <h1>{{ batch.name }}</h1>
+        <dl class="details-grid">
+            <dt>Owner</dt><dd>{{ batch.user.username }}</dd>
+            <dt>Gmail account</dt><dd>{{ batch.gmail_connection.gmail_address }}</dd>
+            <dt>Status</dt><dd>{{ batch.get_status_display }}</dd>
+            <dt>Recipients</dt><dd>{{ batch.recipient_count }}</dd>
+            <dt>Sent</dt><dd>{{ batch.sent_count }}</dd>
+            <dt>Failed</dt><dd>{{ batch.failed_count }}</dd>
+            <dt>Pending</dt><dd>{{ batch.pending_count }}</dd>
+            <dt>Created</dt><dd>{{ batch.created_at }}</dd>
+            <dt>Started</dt><dd>{{ batch.started_at|default:'—' }}</dd>
+            <dt>Completed</dt><dd>{{ batch.completed_at|default:'—' }}</dd>
+        </dl>
+        <div class="button-row top-gap">
+            <form method="post" action="{% url 'process_batch_now' batch.pk %}">
+                {% csrf_token %}
+                <button class="button" type="submit">Process 25 Now</button>
+            </form>
+            <a class="button secondary" href="{% url 'batch_list' %}">Back to batches</a>
+        </div>
+    </div>
+    <div class="card">
+        <h2>Message snapshot</h2>
+        <p><strong>Subject:</strong> {{ batch.subject }}</p>
+        <pre class="message-preview">{{ batch.body }}</pre>
+    </div>
+</section>
+
+<section class="card top-gap">
+    <h2>Recipients</h2>
+    {% if jobs %}
+    <table>
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Provider message id</th>
+                <th>Error</th>
+                <th>Sent at</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in jobs %}
+            <tr>
+                <td>{{ job.recipient_email }}</td>
+                <td>{{ job.get_status_display }}</td>
+                <td>{{ job.provider_message_id|default:'—' }}</td>
+                <td>{{ job.error_message|default:'—' }}</td>
+                <td>{{ job.sent_at|default:'—' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No recipients saved for this batch.</p>
+    {% endif %}
+</section>
+{% endblock %}

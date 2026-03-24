@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ app_name|default:'Gmail Batch Mailer' }}{% endblock %}</title>
+    <link rel="stylesheet" href="/static/mailer/styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-flex">
+            <div>
+                <a class="brand" href="{% url 'dashboard' %}">{{ app_name|default:'Gmail Batch Mailer' }}</a>
+                <p class="tagline">Connect Gmail, load templates, edit content, and send batches to up to 100 recipients.</p>
+            </div>
+            {% if request.user.is_authenticated %}
+            <nav class="nav-links">
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+                <a href="{% url 'compose_batch' %}">Compose</a>
+                <a href="{% url 'batch_list' %}">Batches</a>
+                <a href="{% url 'connection_list' %}">Gmail Accounts</a>
+                {% if request.user.is_staff %}
+                <a href="{% url 'template_list' %}">Templates</a>
+                <a href="/admin/">Admin</a>
+                {% endif %}
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button class="link-button" type="submit">Logout</button>
+                </form>
+            </nav>
+            {% endif %}
+        </div>
+    </header>
+
+    <main class="container main-content">
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

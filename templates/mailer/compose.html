@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Compose Batch{% endblock %}
+{% block content %}
+<div class="card">
+    <h1>Create Email Batch</h1>
+    <p>Select a saved template if you want a starting point, then edit the subject/body freely before queueing the send.</p>
+    <form method="post" enctype="multipart/form-data" class="stacked-form" id="compose-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="hint-box">
+            <p><strong>Recipient limit:</strong> {{ recipient_limit }} emails per batch.</p>
+            <p><strong>Template placeholders:</strong> <code>{% templatetag openvariable %}email{% templatetag closevariable %}</code> and <code>{% templatetag openvariable %}app_name{% templatetag closevariable %}</code>.</p>
+        </div>
+        <div class="button-row">
+            <button class="button" type="submit">Queue batch</button>
+            <a class="button secondary" href="{% url 'batch_list' %}">View batches</a>
+        </div>
+    </form>
+</div>
+
+{{ templates_for_js|json_script:"template-data" }}
+<script>
+(function () {
+    const templateSelect = document.getElementById('id_template');
+    const subjectInput = document.getElementById('id_subject');
+    const bodyInput = document.getElementById('id_body');
+    const raw = document.getElementById('template-data');
+    if (!templateSelect || !subjectInput || !bodyInput || !raw) return;
+    const templates = JSON.parse(raw.textContent || '[]');
+
+    templateSelect.addEventListener('change', function () {
+        const selectedId = Number(this.value);
+        const template = templates.find(item => item.id === selectedId);
+        if (!template) return;
+        if ((subjectInput.value || bodyInput.value) && !window.confirm('Replace the current subject and body with the selected template?')) {
+            return;
+        }
+        subjectInput.value = template.subject || '';
+        bodyInput.value = template.body || '';
+    });
+})();
+</script>
+{% endblock %}

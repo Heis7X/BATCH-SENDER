@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<section class="grid two-up gap">
+    <div class="card">
+        <h1>Dashboard</h1>
+        <div class="stats-grid">
+            <div class="stat-box"><span class="stat-value">{{ stats.template_count }}</span><span>Active templates</span></div>
+            <div class="stat-box"><span class="stat-value">{{ stats.connection_count }}</span><span>Connected Gmail accounts</span></div>
+            <div class="stat-box"><span class="stat-value">{{ stats.queued_batches }}</span><span>Queued batches</span></div>
+            <div class="stat-box"><span class="stat-value">{{ stats.completed_batches }}</span><span>Completed batches</span></div>
+        </div>
+        <div class="button-row top-gap">
+            <a class="button" href="{% url 'compose_batch' %}">Create batch</a>
+            <a class="button secondary" href="{% url 'connection_list' %}">Connect Gmail</a>
+            {% if request.user.is_staff %}
+            <a class="button secondary" href="{% url 'template_list' %}">Manage templates</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card">
+        <h2>Worker note</h2>
+        <p>For continuous sending, run the email worker in a second process:</p>
+        <pre><code>python manage.py run_email_worker</code></pre>
+        <p>You can also open a batch and click <strong>Process 25 Now</strong> for a manual send pass.</p>
+        <p>Supported placeholders in subject/body: <code>{% templatetag openvariable %}email{% templatetag closevariable %}</code> and <code>{% templatetag openvariable %}app_name{% templatetag closevariable %}</code>.</p>
+    </div>
+</section>
+
+<section class="card top-gap">
+    <h2>Recent batches</h2>
+    {% if recent_batches %}
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Gmail account</th>
+                <th>Status</th>
+                <th>Recipients</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for batch in recent_batches %}
+            <tr>
+                <td><a href="{% url 'batch_detail' batch.pk %}">{{ batch.name }}</a></td>
+                <td>{{ batch.gmail_connection.gmail_address }}</td>
+                <td><span class="badge">{{ batch.get_status_display }}</span></td>
+                <td>{{ batch.recipient_count }}</td>
+                <td>{{ batch.created_at }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No batches yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

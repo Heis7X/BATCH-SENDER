@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Templates{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Templates</h1>
+    <a class="button" href="{% url 'template_create' %}">New template</a>
+</div>
+<div class="card">
+    {% if templates %}
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Subject</th>
+                <th>Active</th>
+                <th>Updated</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for template in templates %}
+            <tr>
+                <td>{{ template.name }}</td>
+                <td>{{ template.subject }}</td>
+                <td>{{ template.is_active|yesno:'Yes,No' }}</td>
+                <td>{{ template.updated_at }}</td>
+                <td class="actions">
+                    <a href="{% url 'template_update' template.pk %}">Edit</a>
+                    <a href="{% url 'template_delete' template.pk %}">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No templates yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

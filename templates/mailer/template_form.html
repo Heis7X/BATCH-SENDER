@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="card narrow-wide">
+    <h1>{{ title }}</h1>
+    <form method="post" class="stacked-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="button-row">
+            <button class="button" type="submit">Save template</button>
+            <a class="button secondary" href="{% url 'template_list' %}">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Gmail Accounts{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Connected Gmail Accounts</h1>
+    <a class="button" href="{% url 'gmail_connect' %}">Connect Gmail account</a>
+</div>
+<div class="card">
+    <p>Use Google OAuth. The app stores the refresh token in encrypted form and sends mail through the Gmail API.</p>
+    {% if connections %}
+    <table>
+        <thead>
+            <tr>
+                <th>Address</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Last used</th>
+                <th>Error</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for connection in connections %}
+            <tr>
+                <td>{{ connection.gmail_address }}</td>
+                <td>{{ connection.display_name|default:'—' }}</td>
+                <td>{{ connection.is_active|yesno:'Active,Inactive' }}</td>
+                <td>{{ connection.last_used_at|default:'—' }}</td>
+                <td>{{ connection.last_error|default:'—' }}</td>
+                <td>
+                    <form method="post" action="{% url 'connection_toggle' connection.pk %}">
+                        {% csrf_token %}
+                        <button class="button secondary small" type="submit">
+                            {% if connection.is_active %}Disable{% else %}Enable{% endif %}
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No Gmail accounts connected yet.</p>
+    {% endif %}
+</div>
+{% endblock %}
