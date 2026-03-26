@@ -115,8 +115,8 @@ GOOGLE_OAUTH_REDIRECT_URI = os.environ.get(
 )
 GOOGLE_OAUTH_SCOPES = [
     "openid",
-    "email",
-    "profile",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/userinfo.profile",
     "https://www.googleapis.com/auth/gmail.send",
 ]
 TOKEN_ENCRYPTION_KEY = os.environ.get("TOKEN_ENCRYPTION_KEY", "")
