@@ -79,11 +79,12 @@ def get_google_client_config() -> dict:
     }
 
 
-def build_google_flow(*, state: str | None = None) -> Flow:
+def build_google_flow(*, state: str | None = None, code_verifier: str | None = None) -> Flow:
     flow = Flow.from_client_config(
         get_google_client_config(),
         scopes=settings.GOOGLE_OAUTH_SCOPES,
         state=state,
+        code_verifier=code_verifier,
     )
     flow.redirect_uri = settings.GOOGLE_OAUTH_REDIRECT_URI
     return flow

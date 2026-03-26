@@ -115,12 +115,14 @@ def connection_list(request: HttpRequest) -> HttpResponse:
     connections = GmailConnection.objects.filter(user=request.user).order_by("gmail_address")
     return render(request, "mailer/connections.html", {"connections": connections})
 
+import secrets
 
 @login_required
 @require_GET
 def gmail_connect(request: HttpRequest) -> HttpResponse:
     try:
-        flow = build_google_flow()
+        code_verifier = secrets.token_urlsafe(64)
+        flow = build_google_flow(code_verifier=code_verifier)
         authorization_url, state = flow.authorization_url(
             access_type="offline",
             include_granted_scopes="true",
@@ -131,6 +133,7 @@ def gmail_connect(request: HttpRequest) -> HttpResponse:
         return redirect("connection_list")
 
     request.session["gmail_oauth_state"] = state
+    request.session["gmail_oauth_code_verifier"] = code_verifier
     return redirect(authorization_url)
 
 
@@ -138,12 +141,18 @@ def gmail_connect(request: HttpRequest) -> HttpResponse:
 @require_GET
 def gmail_callback(request: HttpRequest) -> HttpResponse:
     state = request.session.get("gmail_oauth_state")
+    code_verifier = request.session.get("gmail_oauth_code_verifier")
+
     if not state or request.GET.get("state") != state:
         messages.error(request, "OAuth state mismatch. Please reconnect the Gmail account.")
         return redirect("connection_list")
 
+    if not code_verifier:
+        messages.error(request, "Missing OAuth code verifier. Please reconnect the Gmail account.")
+        return redirect("connection_list")
+
     try:
-        flow = build_google_flow(state=state)
+        flow = build_google_flow(state=state, code_verifier=code_verifier)
         flow.fetch_token(authorization_response=request.build_absolute_uri())
         credentials = flow.credentials
         profile = fetch_google_profile(credentials)
@@ -173,6 +182,7 @@ def gmail_callback(request: HttpRequest) -> HttpResponse:
         {"gmail_address": gmail_address},
     )
     request.session.pop("gmail_oauth_state", None)
+    request.session.pop("gmail_oauth_code_verifier", None)
     messages.success(request, f"Connected Gmail account: {gmail_address}")
     return redirect("connection_list")
 
