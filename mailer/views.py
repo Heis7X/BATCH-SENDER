@@ -140,51 +140,46 @@ def gmail_connect(request: HttpRequest) -> HttpResponse:
 @login_required
 @require_GET
 def gmail_callback(request: HttpRequest) -> HttpResponse:
-    state = request.session.get("gmail_oauth_state")
-    code_verifier = request.session.get("gmail_oauth_code_verifier")
-
-    if not state or request.GET.get("state") != state:
-        messages.error(request, "OAuth state mismatch. Please reconnect the Gmail account.")
-        return redirect("connection_list")
-
-    if not code_verifier:
-        messages.error(request, "Missing OAuth code verifier. Please reconnect the Gmail account.")
-        return redirect("connection_list")
-
     try:
+        state = request.session.get("gmail_oauth_state")
+        code_verifier = request.session.get("gmail_oauth_code_verifier")
+
+        if not state or request.GET.get("state") != state:
+            messages.error(request, "OAuth state mismatch. Please reconnect.")
+            return redirect("connection_list")
+
+        if not code_verifier:
+            messages.error(request, "Missing code verifier. Please reconnect.")
+            return redirect("connection_list")
+
         flow = build_google_flow(state=state, code_verifier=code_verifier)
         flow.fetch_token(authorization_response=request.build_absolute_uri())
+
         credentials = flow.credentials
         profile = fetch_google_profile(credentials)
-    except Exception as exc:  # pragma: no cover - external OAuth path
-        messages.error(request, f"Could not connect Gmail account: {exc}")
+
+        gmail_address = profile.get("email")
+
+        connection, created = GmailConnection.objects.update_or_create(
+            user=request.user,
+            gmail_address=gmail_address,
+            defaults={
+                "display_name": profile.get("name", ""),
+                "encrypted_credentials": encrypt_json(credentials_to_dict(credentials)),
+                "is_active": True,
+                "last_error": "",
+            },
+        )
+
+        request.session.pop("gmail_oauth_state", None)
+        request.session.pop("gmail_oauth_code_verifier", None)
+
+        messages.success(request, f"Gmail connected: {gmail_address}")
         return redirect("connection_list")
 
-    gmail_address = profile.get("email")
-    if not gmail_address:
-        messages.error(request, "Google did not return an email address.")
+    except Exception as exc:
+        messages.error(request, f"Gmail error: {exc}")
         return redirect("connection_list")
-
-    connection, created = GmailConnection.objects.update_or_create(
-        user=request.user,
-        gmail_address=gmail_address,
-        defaults={
-            "display_name": profile.get("name", ""),
-            "encrypted_credentials": encrypt_json(credentials_to_dict(credentials)),
-            "is_active": True,
-            "last_error": "",
-        },
-    )
-    log_action(
-        request.user,
-        "gmail.connected" if created else "gmail.reconnected",
-        str(connection.pk),
-        {"gmail_address": gmail_address},
-    )
-    request.session.pop("gmail_oauth_state", None)
-    request.session.pop("gmail_oauth_code_verifier", None)
-    messages.success(request, f"Connected Gmail account: {gmail_address}")
-    return redirect("connection_list")
 
 
 @login_required
