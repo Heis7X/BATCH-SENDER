@@ -16,4 +16,5 @@ urlpatterns = [
     path("batches/", views.batch_list, name="batch_list"),
     path("batches/<int:pk>/", views.batch_detail, name="batch_detail"),
     path("batches/<int:pk>/process/", views.process_batch_now, name="process_batch_now"),
+    path("signup/", views.signup, name="signup"),
 ]

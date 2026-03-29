@@ -12,6 +12,7 @@ class EmailTemplate(models.Model):
     subject = models.CharField(max_length=255)
     body = models.TextField()
     is_active = models.BooleanField(default=True)
+    is_shared = models.BooleanField(default=False)
     created_by = models.ForeignKey(
         User,
         null=True,

@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from django.conf import settings
+from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
+from django.contrib.auth import login
+from .forms import SignUpForm
 
 from .forms import ComposeBatchForm, EmailTemplateForm
 from .models import EmailBatch, EmailTemplate, GmailConnection
@@ -69,6 +72,7 @@ def template_create(request: HttpRequest) -> HttpResponse:
         if form.is_valid():
             template = form.save(commit=False)
             template.created_by = request.user
+            template.is_shared = True
             template.updated_by = request.user
             template.save()
             log_action(request.user, "template.created", str(template.pk), {"name": template.name})
@@ -182,6 +186,22 @@ def gmail_callback(request: HttpRequest) -> HttpResponse:
         return redirect("connection_list")
 
 
+def signup(request):
+    if request.user.is_authenticated:
+        return redirect("connection_list")
+
+    if request.method == "POST":
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect("connection_list")
+    else:
+        form = SignUpForm()
+
+    return render(request, "registration/signup.html", {"form": form})
+
+
 @login_required
 @require_POST
 def connection_toggle(request: HttpRequest, pk: int) -> HttpResponse:
@@ -244,12 +264,12 @@ def compose_batch(request: HttpRequest) -> HttpResponse:
     else:
         form = ComposeBatchForm(user=request.user)
 
-    templates = list(EmailTemplate.objects.filter(is_active=True).values("id", "name", "subject", "body"))
-    return render(
-        request,
-        "mailer/compose.html",
-        {"form": form, "templates_for_js": templates, "recipient_limit": settings.EMAIL_BATCH_MAX_RECIPIENTS},
-    )
+    templates = list(
+    EmailTemplate.objects.filter(
+        Q(is_shared=True) | Q(created_by=request.user),
+        is_active=True
+    ).values("id", "name", "subject", "body")
+)
 
 
 @login_required

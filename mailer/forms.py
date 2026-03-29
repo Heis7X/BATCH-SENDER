@@ -50,3 +50,20 @@ class ComposeBatchForm(forms.Form):
         self.fields["gmail_connection"].queryset = GmailConnection.objects.filter(
             user=user, is_active=True
         ).order_by("gmail_address")
+
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+
+
+class SignUpForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+
+    class Meta:
+        model = User
+        fields = ("username", "email", "password1", "password2")
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].lower()
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("Email already exists")
+        return email
