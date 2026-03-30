@@ -110,7 +110,7 @@ def user_template_create(request: HttpRequest) -> HttpResponse:
             template.is_shared = False
             template.save()
             messages.success(request, "Template created successfully.")
-            return redirect("connection_list")
+            return redirect("dashboard")
     else:
         form = EmailTemplateForm()
 
@@ -222,7 +222,7 @@ def gmail_callback(request: HttpRequest) -> HttpResponse:
 
 def signup(request):
     if request.user.is_authenticated:
-        return redirect("connection_list")
+        return redirect("dashboard")
 
     if request.method == "POST":
         form = SignUpForm(request.POST)
@@ -299,11 +299,21 @@ def compose_batch(request: HttpRequest) -> HttpResponse:
         form = ComposeBatchForm(user=request.user)
 
     templates = list(
-    EmailTemplate.objects.filter(
-        Q(is_shared=True) | Q(created_by=request.user),
-        is_active=True
-    ).values("id", "name", "subject", "body")
-)
+        EmailTemplate.objects.filter(
+            Q(is_shared=True) | Q(created_by=request.user),
+            is_active=True,
+        ).values("id", "name", "subject", "body")
+    )
+
+    return render(
+        request,
+        "mailer/compose.html",
+        {
+            "form": form,
+            "templates_for_js": templates,
+            "recipient_limit": settings.EMAIL_BATCH_MAX_RECIPIENTS,
+        },
+    )
 
 
 @login_required
