@@ -5,9 +5,9 @@ from .models import AuditLog, EmailBatch, EmailTemplate, GmailConnection, Recipi
 
 @admin.register(EmailTemplate)
 class EmailTemplateAdmin(admin.ModelAdmin):
-    list_display = ("name", "is_active", "updated_at", "updated_by")
-    list_filter = ("is_active",)
-    search_fields = ("name", "subject", "body")
+    list_display = ("name", "created_by", "is_shared", "is_active", "updated_at", "updated_by")
+    list_filter = ("is_shared", "is_active", "created_by")
+    search_fields = ("name", "subject", "body", "created_by__username", "created_by__email")
 
 
 @admin.register(GmailConnection)
@@ -32,12 +32,21 @@ class EmailBatchAdmin(admin.ModelAdmin):
         "name",
         "user",
         "gmail_connection",
+        "template",
         "recipient_count",
         "status",
         "created_at",
     )
     list_filter = ("status", "gmail_connection", "user")
-    search_fields = ("name", "subject", "body", "user__username", "gmail_connection__gmail_address")
+    search_fields = (
+        "name",
+        "subject",
+        "body",
+        "user__username",
+        "user__email",
+        "gmail_connection__gmail_address",
+        "template__name",
+    )
     inlines = [RecipientJobInline]
 
 
