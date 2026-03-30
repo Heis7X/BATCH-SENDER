@@ -84,7 +84,7 @@ def template_create(request: HttpRequest) -> HttpResponse:
 
 
 @login_required
-def user_template_create(request):
+def user_template_create(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         form = EmailTemplateForm(request.POST)
         if form.is_valid():
