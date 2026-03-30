@@ -39,12 +39,28 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         recent_batches = recent_batches.filter(user=request.user)
     recent_batches = recent_batches[:5]
 
+    visible_templates = EmailTemplate.objects.filter(
+        Q(is_shared=True) | Q(created_by=request.user),
+        is_active=True,
+    ).order_by("name")
+
     stats = {
-        "template_count": EmailTemplate.objects.filter(is_active=True).count(),
+        "template_count": visible_templates.count(),
         "connection_count": GmailConnection.objects.filter(user=request.user, is_active=True).count(),
         "queued_batches": EmailBatch.objects.filter(user=request.user, status=EmailBatch.Status.QUEUED).count(),
         "completed_batches": EmailBatch.objects.filter(user=request.user, status=EmailBatch.Status.COMPLETED).count(),
     }
+
+    return render(
+        request,
+        "mailer/dashboard.html",
+        {
+            "stats": stats,
+            "recent_batches": recent_batches,
+            "templates": visible_templates,
+            "app_name": settings.APP_NAME,
+        },
+    )
 
     return render(
         request,
