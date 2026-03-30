@@ -84,6 +84,24 @@ def template_create(request: HttpRequest) -> HttpResponse:
 
 
 @login_required
+def user_template_create(request):
+    if request.method == "POST":
+        form = EmailTemplateForm(request.POST)
+        if form.is_valid():
+            template = form.save(commit=False)
+            template.created_by = request.user
+            template.updated_by = request.user
+            template.is_shared = False
+            template.save()
+            messages.success(request, "Template created successfully.")
+            return redirect("connection_list")
+    else:
+        form = EmailTemplateForm()
+
+    return render(request, "mailer/template_form.html", {"form": form})
+
+
+@login_required
 @user_passes_test(is_admin)
 def template_update(request: HttpRequest, pk: int) -> HttpResponse:
     template = get_object_or_404(EmailTemplate, pk=pk)

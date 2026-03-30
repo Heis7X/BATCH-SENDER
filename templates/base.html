@@ -20,6 +20,7 @@
                 <a href="{% url 'batch_list' %}">Batches</a>
                 <a href="{% url 'connection_list' %}">Gmail Accounts</a>
                 {% if request.user.is_staff %}
+                <a href="{% url 'user_template_create' %}">Create Template</a>
                 <a href="{% url 'template_list' %}">Templates</a>
                 <a href="/admin/">Admin</a>
                 {% endif %}

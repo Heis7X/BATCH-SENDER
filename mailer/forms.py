@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from django import forms
 
+from django.db.models import Q
 from .models import EmailTemplate, GmailConnection
 
 
@@ -42,6 +43,20 @@ class ComposeBatchForm(forms.Form):
         required=False,
         help_text="Optional CSV or TXT file with one email per line or a column that contains email addresses.",
     )
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if user is not None:
+            self.fields["template"].queryset = EmailTemplate.objects.filter(
+                Q(is_shared=True) | Q(created_by=user),
+                is_active=True,
+            ).order_by("name")
+
+            self.fields["gmail_connection"].queryset = GmailConnection.objects.filter(
+                user=user,
+                is_active=True,
+            ).order_by("gmail_address")
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user")
