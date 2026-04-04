@@ -76,7 +76,9 @@ def dashboard(request: HttpRequest) -> HttpResponse:
 @login_required
 @user_passes_test(is_admin)
 def template_list(request: HttpRequest) -> HttpResponse:
-    templates = EmailTemplate.objects.all().order_by("name")
+    templates = EmailTemplate.objects.filter(
+        Q(created_by=request.user) | Q(is_shared=True)
+    ).order_by("name")
     return render(request, "mailer/templates_list.html", {"templates": templates})
 
 
@@ -88,7 +90,7 @@ def template_create(request: HttpRequest) -> HttpResponse:
         if form.is_valid():
             template = form.save(commit=False)
             template.created_by = request.user
-            template.is_shared = True
+            template.is_shared = False
             template.updated_by = request.user
             template.save()
             log_action(request.user, "template.created", str(template.pk), {"name": template.name})
