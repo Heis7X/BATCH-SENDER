@@ -10,6 +10,8 @@ from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 from django.contrib.auth import login
 from .forms import SignUpForm
+from .forms import SMTPConnectionForm
+from .models import SMTPConnection
 
 from .forms import ComposeBatchForm, EmailTemplateForm
 from .models import EmailBatch, EmailTemplate, GmailConnection
@@ -255,6 +257,46 @@ def connection_toggle(request: HttpRequest, pk: int) -> HttpResponse:
         f"{connection.gmail_address} is now {'active' if connection.is_active else 'inactive'}.",
     )
     return redirect("connection_list")
+
+
+@login_required
+def smtp_connection_create(request: HttpRequest) -> HttpResponse:
+    if request.method == "POST":
+        form = SMTPConnectionForm(request.POST)
+        if form.is_valid():
+            connection = form.save(commit=False)
+
+            password = form.cleaned_data["password"]
+            connection.encrypted_password = encrypt_json({"password": password})
+
+            connection.user = request.user
+            connection.save()
+
+            messages.success(request, "SMTP connection added successfully.")
+            return redirect("smtp_connection_list")
+    else:
+        form = SMTPConnectionForm()
+
+    return render(request, "mailer/smtp_form.html", {"form": form, "title": "Add SMTP Connection"})
+
+
+@login_required
+def smtp_connection_list(request: HttpRequest) -> HttpResponse:
+    connections = SMTPConnection.objects.filter(user=request.user).order_by("from_email")
+    return render(request, "mailer/smtp_connections.html", {"connections": connections})
+
+
+@login_required
+@require_POST
+def smtp_connection_toggle(request: HttpRequest, pk: int) -> HttpResponse:
+    connection = get_object_or_404(SMTPConnection, pk=pk, user=request.user)
+    connection.is_active = not connection.is_active
+    connection.save(update_fields=["is_active", "updated_at"])
+    messages.success(
+        request,
+        f"{connection.from_email} is now {'active' if connection.is_active else 'inactive'}.",
+    )
+    return redirect("smtp_connection_list")
 
 
 @login_required

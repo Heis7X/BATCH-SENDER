@@ -66,6 +66,26 @@ class ComposeBatchForm(forms.Form):
             user=user, is_active=True
         ).order_by("gmail_address")
 
+
+class SMTPConnectionForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput(render_value=True))
+
+    class Meta:
+        model = SMTPConnection
+        fields = [
+            "name",
+            "from_email",
+            "display_name",
+            "reply_to_email",
+            "smtp_host",
+            "smtp_port",
+            "username",
+            "password",
+            "use_tls",
+            "use_ssl",
+            "is_active",
+        ]
+        
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 

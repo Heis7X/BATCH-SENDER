@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}SMTP Connections{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>SMTP Connections</h1>
+    <a class="button" href="{% url 'smtp_connection_create' %}">Add SMTP Connection</a>
+</div>
+
+<div class="card">
+    {% if connections %}
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>From Email</th>
+                <th>Reply-To</th>
+                <th>Host</th>
+                <th>Port</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for connection in connections %}
+            <tr>
+                <td>{{ connection.name|default:"—" }}</td>
+                <td>{{ connection.from_email }}</td>
+                <td>{{ connection.reply_to_email|default:"—" }}</td>
+                <td>{{ connection.smtp_host }}</td>
+                <td>{{ connection.smtp_port }}</td>
+                <td>{{ connection.is_active|yesno:"Active,Inactive" }}</td>
+                <td>
+                    <form method="post" action="{% url 'smtp_connection_toggle' connection.pk %}">
+                        {% csrf_token %}
+                        <button class="button secondary small" type="submit">
+                            {% if connection.is_active %}Disable{% else %}Enable{% endif %}
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No SMTP connections added yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

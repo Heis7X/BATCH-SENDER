@@ -18,4 +18,7 @@ urlpatterns = [
     path("batches/<int:pk>/", views.batch_detail, name="batch_detail"),
     path("batches/<int:pk>/process/", views.process_batch_now, name="process_batch_now"),
     path("signup/", views.signup, name="signup"),
+    path("smtp/", views.smtp_connection_list, name="smtp_connection_list"),
+    path("smtp/create/", views.smtp_connection_create, name="smtp_connection_create"),
+    path("smtp/<int:pk>/toggle/", views.smtp_connection_toggle, name="smtp_connection_toggle"),
 ]

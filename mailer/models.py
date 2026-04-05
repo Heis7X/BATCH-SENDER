@@ -56,6 +56,26 @@ class GmailConnection(models.Model):
         return f"{self.gmail_address} ({self.user})"
 
 
+class SMTPConnection(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="smtp_connections")
+    name = models.CharField(max_length=150, blank=True)
+    from_email = models.EmailField()
+    display_name = models.CharField(max_length=150, blank=True)
+    reply_to_email = models.EmailField(blank=True)
+    smtp_host = models.CharField(max_length=255)
+    smtp_port = models.PositiveIntegerField(default=587)
+    username = models.CharField(max_length=255)
+    encrypted_password = models.TextField()
+    use_tls = models.BooleanField(default=True)
+    use_ssl = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name or self.from_email
+    
+    
 class EmailBatch(models.Model):
     class Status(models.TextChoices):
         DRAFT = "draft", "Draft"

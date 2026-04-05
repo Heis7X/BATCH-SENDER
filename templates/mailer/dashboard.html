@@ -13,6 +13,7 @@
         <div class="button-row top-gap">
             <a class="button" href="{% url 'compose_batch' %}">Create batch</a>
             <a class="button secondary" href="{% url 'connection_list' %}">Connect Gmail</a>
+            <a class="button secondary" href="{% url 'smtp_connection_list' %}">Connect Private Domain Email</a>
             <a class="button secondary" href="{% url 'user_template_create' %}">Create Template</a>
             {% if request.user.is_staff %}
             <a class="button secondary" href="{% url 'template_list' %}">Manage templates</a>
