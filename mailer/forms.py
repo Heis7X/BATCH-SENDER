@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from django import forms
 
-from .models import SMTPConnection
 
 from django.db.models import Q
-from .models import EmailTemplate, GmailConnection
+from .models import EmailTemplate, GmailConnection, SMTPConnection
 
 
 class EmailTemplateForm(forms.ModelForm):
@@ -26,8 +25,13 @@ class ComposeBatchForm(forms.Form):
     )
     gmail_connection = forms.ModelChoiceField(
         queryset=GmailConnection.objects.none(),
-        required=True,
+        required=False,
         empty_label="Select a connected Gmail account",
+    )
+    smtp_connection = forms.ModelChoiceField(
+        queryset=SMTPConnection.objects.none(),
+        required=False,
+        empty_label="Select a private domain email",
     )
     subject = forms.CharField(max_length=255, required=False)
     body = forms.CharField(widget=forms.Textarea(attrs={"rows": 12}), required=False)
@@ -60,13 +64,24 @@ class ComposeBatchForm(forms.Form):
                 is_active=True,
             ).order_by("gmail_address")
 
-    def __init__(self, *args, **kwargs):
-        user = kwargs.pop("user")
-        super().__init__(*args, **kwargs)
-        self.fields["template"].queryset = EmailTemplate.objects.filter(is_active=True).order_by("name")
-        self.fields["gmail_connection"].queryset = GmailConnection.objects.filter(
-            user=user, is_active=True
-        ).order_by("gmail_address")
+            self.fields["smtp_connection"].queryset = SMTPConnection.objects.filter(
+                user=user,
+                is_active=True,
+            ).order_by("from_email")
+
+    def clean(self):
+        cleaned_data = super().clean() or {}
+
+        gmail = cleaned_data.get("gmail_connection")
+        smtp = cleaned_data.get("smtp_connection")
+
+        if not gmail and not smtp:
+            raise forms.ValidationError("Select either a Gmail account or an SMTP account.")
+
+        if gmail and smtp:
+            raise forms.ValidationError("Select only one sending method (Gmail or SMTP).")
+
+        return cleaned_data
 
 
 class SMTPConnectionForm(forms.ModelForm):

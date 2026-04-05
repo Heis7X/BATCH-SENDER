@@ -75,7 +75,7 @@ class SMTPConnection(models.Model):
     def __str__(self):
         return self.name or self.from_email
     
-    
+
 class EmailBatch(models.Model):
     class Status(models.TextChoices):
         DRAFT = "draft", "Draft"
@@ -90,6 +90,13 @@ class EmailBatch(models.Model):
         GmailConnection,
         on_delete=models.PROTECT,
         related_name="batches",
+    )
+    smtp_connection = models.ForeignKey(
+    SMTPConnection,
+    null=True,
+    blank=True,
+    on_delete=models.SET_NULL,
+    related_name="batches",
     )
     template = models.ForeignKey(
         EmailTemplate,

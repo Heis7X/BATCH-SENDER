@@ -325,15 +325,19 @@ def compose_batch(request: HttpRequest) -> HttpResponse:
                 )
 
             if not form.errors:
+                gmail_connection = form.cleaned_data.get("gmail_connection")
+                smtp_connection = form.cleaned_data.get("smtp_connection")
+                
                 batch = create_batch(
                     user=request.user,
-                    gmail_connection=form.cleaned_data["gmail_connection"],
+                    gmail_connection=gmail_connection,
+                    smtp_connection=smtp_connection,
                     template=template,
                     batch_name=form.cleaned_data["batch_name"],
                     subject=subject,
                     body=body,
                     recipients=recipients,
-                )
+)
                 messages.success(
                     request,
                     f"Batch queued for {len(recipients)} recipients. Start the worker or use Process Now to send.",
