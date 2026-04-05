@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from django import forms
 
+from .models import SMTPConnection
+
 from django.db.models import Q
 from .models import EmailTemplate, GmailConnection
 
@@ -85,7 +87,7 @@ class SMTPConnectionForm(forms.ModelForm):
             "use_ssl",
             "is_active",
         ]
-        
+
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
