@@ -88,6 +88,8 @@ class EmailBatch(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="email_batches")
     gmail_connection = models.ForeignKey(
         GmailConnection,
+        null=True,
+        blank=True,
         on_delete=models.PROTECT,
         related_name="batches",
     )
