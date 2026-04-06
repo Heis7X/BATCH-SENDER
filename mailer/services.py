@@ -19,7 +19,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import Flow
 
-from .models import AuditLog, EmailBatch, EmailTemplate, GmailConnection, RecipientJob
+from .models import AuditLog, EmailBatch, EmailTemplate, GmailConnection, RecipientJob, SMTPConnection
 
 
 def log_action(user, action: str, target: str = "", payload: dict | None = None) -> None:
@@ -228,7 +228,8 @@ def parse_recipients(text: str = "", uploaded_file=None) -> list[str]:
 def create_batch(
     *,
     user,
-    gmail_connection: GmailConnection,
+    gmail_connection: GmailConnection | None = None,
+    smtp_connection: SMTPConnection | None = None,
     template: EmailTemplate | None,
     batch_name: str,
     subject: str,
@@ -236,9 +237,11 @@ def create_batch(
     recipients: Iterable[str],
 ) -> EmailBatch:
     recipient_list = list(recipients)
+
     batch = EmailBatch.objects.create(
         user=user,
         gmail_connection=gmail_connection,
+        smtp_connection=smtp_connection,
         template=template,
         name=batch_name or f"{timezone.now():%Y-%m-%d %H:%M} batch",
         subject=subject,
@@ -246,15 +249,23 @@ def create_batch(
         recipient_count=len(recipient_list),
         status=EmailBatch.Status.QUEUED,
     )
+
     RecipientJob.objects.bulk_create(
         [RecipientJob(batch=batch, recipient_email=email) for email in recipient_list]
     )
+
+    sender_address = ""
+    if gmail_connection:
+        sender_address = gmail_connection.gmail_address
+    elif smtp_connection:
+        sender_address = smtp_connection.from_email
+
     log_action(
         user,
         "batch.created",
         target=str(batch.pk),
         payload={
-            "gmail_address": gmail_connection.gmail_address,
+            "sender_address": sender_address,
             "recipient_count": len(recipient_list),
             "template": template.name if template else "",
         },
