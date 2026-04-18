@@ -29,6 +29,11 @@ from .services import (
 
 
 
+import logging
+logger = logging.getLogger(__name__)
+
+
+
 def is_admin(user) -> bool:
     return user.is_authenticated and user.is_staff
 
@@ -119,6 +124,34 @@ def user_template_create(request: HttpRequest) -> HttpResponse:
         form = EmailTemplateForm()
 
     return render(request, "mailer/template_form.html", {"form": form})
+
+
+@login_required
+def user_template_update(request: HttpRequest, pk: int) -> HttpResponse:
+    template = get_object_or_404(
+        EmailTemplate,
+        pk=pk,
+        created_by=request.user,
+        is_shared=False,
+    )
+
+    if request.method == "POST":
+        form = EmailTemplateForm(request.POST, instance=template)
+        if form.is_valid():
+            template = form.save(commit=False)
+            template.updated_by = request.user
+            template.is_shared = False
+            template.save()
+            messages.success(request, "Template updated successfully.")
+            return redirect("dashboard")
+    else:
+        form = EmailTemplateForm(instance=template)
+
+    return render(
+        request,
+        "mailer/template_form.html",
+        {"form": form, "title": f"Edit {template.name}"},
+    )
 
 
 @login_required
@@ -327,7 +360,7 @@ def compose_batch(request: HttpRequest) -> HttpResponse:
             if not form.errors:
                 gmail_connection = form.cleaned_data.get("gmail_connection")
                 smtp_connection = form.cleaned_data.get("smtp_connection")
-                
+
                 batch = create_batch(
                     user=request.user,
                     gmail_connection=gmail_connection,

@@ -30,17 +30,25 @@
                     <th>Name</th>
                     <th>Subject</th>
                     <th>Type</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
-                {% for template in templates %}
-                <tr>
-                    <td>{{ template.name }}</td>
-                    <td>{{ template.subject }}</td>
-                    <td>{% if template.is_shared %}Shared{% else %}Mine{% endif %}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
+    {% for template in templates %}
+    <tr>
+        <td>{{ template.name }}</td>
+        <td>{{ template.subject }}</td>
+        <td>{% if template.is_shared %}Shared{% else %}Mine{% endif %}</td>
+        <td>
+            {% if not template.is_shared and template.created_by == request.user %}
+            <a class="button secondary small" href="{% url 'user_template_update' template.pk %}">Edit</a>
+            {% else %}
+            —
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
         </table>
         {% else %}
         <p>No templates yet.</p>

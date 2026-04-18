@@ -8,6 +8,7 @@ urlpatterns = [
     path("templates/new/", views.template_create, name="template_create"),
     path("templates/<int:pk>/edit/", views.template_update, name="template_update"),
     path("templates/<int:pk>/delete/", views.template_delete, name="template_delete"),
+    path("templates/<int:pk>/edit/", views.user_template_update, name="user_template_update"),
     path("gmail/", views.connection_list, name="connection_list"),
     path("gmail/connect/", views.gmail_connect, name="gmail_connect"),
     path("gmail/callback/", views.gmail_callback, name="gmail_callback"),
