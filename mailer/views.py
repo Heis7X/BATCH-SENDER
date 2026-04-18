@@ -127,34 +127,6 @@ def user_template_create(request: HttpRequest) -> HttpResponse:
 
 
 @login_required
-def user_template_update(request: HttpRequest, pk: int) -> HttpResponse:
-    template = get_object_or_404(
-        EmailTemplate,
-        pk=pk,
-        created_by=request.user,
-        is_shared=False,
-    )
-
-    if request.method == "POST":
-        form = EmailTemplateForm(request.POST, instance=template)
-        if form.is_valid():
-            template = form.save(commit=False)
-            template.updated_by = request.user
-            template.is_shared = False
-            template.save()
-            messages.success(request, "Template updated successfully.")
-            return redirect("dashboard")
-    else:
-        form = EmailTemplateForm(instance=template)
-
-    return render(
-        request,
-        "mailer/template_form.html",
-        {"form": form, "title": f"Edit {template.name}"},
-    )
-
-
-@login_required
 @user_passes_test(is_admin)
 def template_update(request: HttpRequest, pk: int) -> HttpResponse:
     template = get_object_or_404(EmailTemplate, pk=pk)
