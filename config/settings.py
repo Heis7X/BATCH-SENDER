@@ -4,7 +4,6 @@ import dj_database_url
 
 import os
 
-load_dotenv()
 
 import os
 from pathlib import Path
